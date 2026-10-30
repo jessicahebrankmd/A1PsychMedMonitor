@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Psychotropic Medication Monitoring Reference</title>
+<style>
+  :root{
+    --bg:#f6f7fb;
+    --panel:#ffffff;
+    --border:#e2e5ec;
+    --text:#1f2430;
+    --text-dim:#5b6272;
+    --accent:#3454d1;
+    --accent-dim:#eef1fd;
+    --vitals:#3454d1;
+    --vitals-bg:#eaf0ff;
+    --labs:#7c3aed;
+    --labs-bg:#f2ebfe;
+    --other:#0f766e;
+    --other-bg:#e6f6f4;
+    --radius:12px;
+    --shadow: 0 1px 2px rgba(20,22,30,.04), 0 4px 14px rgba(20,22,30,.05);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  a{color:inherit;}
+  button{font-family:inherit;cursor:pointer;}
+  input,select,textarea{font-family:inherit;}
+
+  .app{max-width:1100px;margin:0 auto;padding:0 20px 64px;}
+
+  header.top{
+    position:sticky;top:0;z-index:20;
+    background:rgba(246,247,251,.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--border);
+    padding:14px 20px;
+  }
+  .top-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .brand{display:flex;flex-direction:column;gap:2px;margin-right:auto;}
+  .brand-title{font-size:16px;font-weight:700;letter-spacing:-.01em;}
+  .brand-sub{font-size:12px;color:var(--text-dim);}
+  nav.tabs{display:flex;gap:4px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:3px;}
+  nav.tabs button{
+    border:none;background:transparent;padding:8px 14px;border-radius:8px;
+    font-size:13.5px;font-weight:600;color:var(--text-dim);
+  }
+  nav.tabs button.active{background:var(--accent);color:#fff;}
+  .settings-btn{
+    border:1px solid var(--border);background:#fff;color:var(--text-dim);
+    border-radius:10px;width:36px;height:36px;font-size:16px;line-height:1;flex:0 0 auto;
+  }
+  .settings-btn:hover{color:var(--accent);border-color:#c3cdf7;}
+
+  /* Settings / data source */
+  .settings-row{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+  .settings-row input{flex:1;min-width:220px;padding:11px 14px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:#fff;}
+  .btn{border:1px solid var(--border);background:#fff;padding:9px 16px;border-radius:9px;font-size:13.5px;font-weight:600;color:var(--text);}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .btn.danger{color:#b4232c;border-color:#f3c7ca;}
+  .btn:disabled{opacity:.6;cursor:default;}
+  .sync-status{font-size:13px;margin:10px 0;padding:10px 12px;border-radius:8px;}
+  .sync-status.success{background:#eaf7ee;color:#1d7a3a;border:1px solid #cdeada;}
+  .sync-status.error{background:#fdecec;color:#a4282e;border:1px solid #f6cfd1;}
+  .sync-status.loading{background:#eef1fd;color:var(--accent);border:1px solid #c3cdf7;}
+  .settings-steps{font-size:13px;color:var(--text-dim);line-height:1.6;}
+  .settings-steps li{margin-bottom:4px;}
+
+  main{padding-top:22px;}
+  .disclaimer{
+    background:#fffaf0;border:1px solid #f3dfae;color:#7a5b12;
+    border-radius:10px;padding:10px 14px;font-size:12.5px;line-height:1.5;margin-bottom:20px;
+  }
+
+  h1.page-title{font-size:22px;margin:4px 0 4px;letter-spacing:-.02em;}
+  p.page-sub{color:var(--text-dim);font-size:13.5px;margin:0 0 18px;}
+
+  .search-row{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .search-input{
+    flex:1;min-width:220px;padding:11px 14px;border:1px solid var(--border);
+    border-radius:10px;font-size:14px;background:#fff;
+  }
+  .chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+  .chip{
+    border:1px solid var(--border);background:#fff;color:var(--text-dim);
+    padding:6px 12px;border-radius:999px;font-size:12.5px;font-weight:600;
+  }
+  .chip.active{background:var(--accent-dim);border-color:#c3cdf7;color:var(--accent);}
+
+  .med-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
+  .med-card{
+    background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
+    padding:14px 16px;box-shadow:var(--shadow);text-align:left;
+  }
+  .med-card button.card-open{all:unset;display:block;cursor:pointer;width:100%;}
+  .med-generic{font-size:15px;font-weight:700;}
+  .med-brand{font-size:12.5px;color:var(--text-dim);margin-top:2px;}
+  .class-tag{
+    display:inline-block;margin-top:10px;font-size:11px;font-weight:700;
+    padding:3px 9px;border-radius:999px;background:var(--vitals-bg);color:var(--vitals);
+  }
+  .empty-note{color:var(--text-dim);font-size:13.5px;padding:30px 10px;text-align:center;}
+
+  /* Medication detail */
+  .back-link{background:none;border:none;color:var(--accent);font-weight:600;font-size:13px;padding:0 0 14px;display:inline-flex;align-items:center;gap:4px;}
+  .med-header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:18px;}
+  .med-header h1{margin:0 0 4px;font-size:22px;}
+  .med-header .brand-line{color:var(--text-dim);font-size:14px;}
+  .med-header .class-tag{margin-top:8px;}
+
+  .section-card{
+    background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
+    padding:16px 18px;margin-bottom:14px;box-shadow:var(--shadow);
+  }
+  .section-card h3{margin:0 0 4px;font-size:14.5px;}
+  .section-card .section-hint{font-size:11.5px;color:var(--text-dim);margin-bottom:10px;}
+  .item-row{
+    display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-top:1px solid #f0f1f6;
+  }
+  .item-row:first-of-type{border-top:none;}
+  .cat-tag{
+    flex:0 0 auto;font-size:10.5px;font-weight:800;letter-spacing:.02em;
+    padding:2px 7px;border-radius:6px;margin-top:1px;
+  }
+  .cat-tag.Vitals{background:var(--vitals-bg);color:var(--vitals);}
+  .cat-tag.Labs{background:var(--labs-bg);color:var(--labs);}
+  .cat-tag.Other{background:var(--other-bg);color:var(--other);}
+  .item-text{flex:1;font-size:13.5px;line-height:1.45;}
+  .item-note{color:var(--text-dim);font-size:12px;}
+  .item-freq{color:var(--text-dim);font-size:12px;white-space:pre-line;text-align:right;}
+
+  /* Reference */
+  .ref-table{width:100%;border-collapse:collapse;margin-bottom:20px;background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+  .ref-table th, .ref-table td{padding:8px 12px;font-size:13px;text-align:left;border-bottom:1px solid #f0f1f6;}
+  .ref-table th{background:#fafbfd;font-size:11.5px;text-transform:uppercase;color:var(--text-dim);letter-spacing:.03em;}
+  .ref-table tr:last-child td{border-bottom:none;}
+
+  footer.appfoot{text-align:center;color:var(--text-dim);font-size:11.5px;margin-top:30px;padding-top:16px;border-top:1px solid var(--border);}
+
+  @media (max-width:640px){
+    .top-inner{flex-direction:column;align-items:stretch;}
+    nav.tabs{justify-content:space-between;}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">
+      <div class="brand-title">Psychotropic Medication Monitoring</div>
+      <div class="brand-sub">Based on Devereux Psychotropic Medication Monitoring Guidelines (v9)</div>
+    </div>
+    <nav class="tabs" id="tabNav"></nav>
+    <button id="settingsBtn" class="settings-btn" title="Data source settings" aria-label="Data source settings">⚙</button>
+  </div>
+</header>
+
+<div class="app">
+  <main id="main"></main>
+  <footer class="appfoot">
+    Reference source: Devereux Psychotropic Medication Monitoring Guidelines, reviewed &amp; approved by Jonathan Jacobson, M.D. (to be reviewed and signed yearly). This tool is a reference for the guideline's monitoring schedule and does not replace clinical judgment, the prescriber's orders, or the facility's official record.
+  </footer>
+</div>
+
+<script>
+/* ============================= DATA ============================= */
+const DAY = 1;
+const WEEK = 7, TWO_WEEKS = 14, SIX_WEEKS = 42, MONTH = 30, THREE_MONTHS = 91,
+      FOUR_MONTHS = 122, SIX_MONTHS = 182, TWELVE_MONTHS = 365;
+
+const DEFAULT_CLASS_GROUPS = {
+  adhd_nonstim:  {name:"ADHD – Non-Stimulant", group:"ADHD"},
+  adhd_stim:     {name:"ADHD – Stimulant", group:"ADHD"},
+  ssri:          {name:"Antidepressant – SSRI", group:"Antidepressant"},
+  tca:           {name:"Antidepressant – Tricyclic (TCA)", group:"Antidepressant"},
+  antidep_other: {name:"Antidepressant – Other", group:"Antidepressant"},
+  antipsych_atypical: {name:"Antipsychotic – Atypical (SGA)", group:"Antipsychotic"},
+  antipsych_typical:  {name:"Antipsychotic – Typical (FGA)", group:"Antipsychotic"},
+  antipsych_clozaril: {name:"Antipsychotic – Clozaril", group:"Antipsychotic"},
+  antipsych_muscarinic: {name:"Antipsychotic – Muscarinic Agonist", group:"Antipsychotic"},
+  anticonv_depakote: {name:"Anticonvulsant – Depakote", group:"Anticonvulsant"},
+  anticonv_lamictal: {name:"Anticonvulsant – Lamictal", group:"Anticonvulsant"},
+  anticonv_other:    {name:"Anticonvulsant – Other", group:"Anticonvulsant"},
+  anticonv_topiramate: {name:"Anticonvulsant – Topiramate", group:"Anticonvulsant"},
+  lithium:       {name:"Lithium", group:"Lithium"},
+  antihypertensive: {name:"Antihypertensive", group:"Antihypertensive"}
+};
+
+// Each class: before / baseline (one-time at start) / afterStart (one-time offset) / monitoring (recurring)
+const DEFAULT_CLASS_DATA = {
+  adhd_nonstim: {
+    before: [],
+    baseline: [
+      {cat:'Vitals', text:'Ht / Wt / BMI / BMI percentile'},
+      {cat:'Vitals', text:'HR / BP / BP percentile'}
+    ],
+    afterStart: [
+      {cat:'Vitals', text:'Ht / Wt / BMI / BMI percentile, HR / BP / BP percentile', offset: MONTH, freqLabel:'1 month after start/increase'}
+    ],
+    monitoring: [
+      {cat:'Vitals', text:'Ht / Wt / BMI / BMI percentile, HR / BP / BP percentile', freq: THREE_MONTHS, freqLabel:'Every 3 months'}
+    ]
+  },
+  adhd_stim: {
+    before: [],
+    baseline: [
+      {cat:'Vitals', text:'Ht / Wt / BMI / BMI percentile'},
+      {cat:'Vitals', text:'HR / BP / BP percentile'}
+    ],
+    afterStart: [
+      {cat:'Vitals', text:'Weight, HR / BP', offset: TWO_WEEKS, freqLabel:'2 weeks after increase'}
+    ],
+    monitoring: [
+      {cat:'Vitals', text:'Ht / Wt / BMI / BMI percentile', freq: MONTH, freqLabel:'Every month'},
+      {cat:'Vitals', text:'HR / BP / BP percentile', freq: THREE_MONTHS, freqLabel:'Every 3 months'}
+    ]
+  },
+  ssri: {
+    before: [],
+    baseline: [
+      {cat:'Vitals', text:'Ht / Wt / BMI / BMI percentile, HR / BP / BP percentile'},
+      {cat:'Labs', text:'Electrolytes', note:'Citalopram only'}
+    ],
+    afterStart: [],
+    monitoring: [
+      {cat:'Vitals', text:'Ht / Wt / BMI / BMI percentile, HR / BP / BP percentile', freq: THREE_MONTHS, freqLabel:'Every 3 months'}
+    ]
+  },
+  tca: {
+    before: [
+      {cat:'Labs', text:'Negative pregnancy test (HCG)', femaleOnly:true},
+      {cat:'Other', text:'EKG'}
+    ],
+    baseline: [
+      {cat:'Vitals', text:'Ht / Wt / BMI / BMI percentile, HR / BP / BP percentile'},
+      {cat:'Labs', text:'LFTs'},
+      {cat:'Labs', text:'HCG', femaleOnly:true},
+      {cat:'Labs', text:'Drug level', note:'Nortriptyline only'},
+      {cat:'Other', text:'EKG'}
+    ],
+    afterStart: [
+      {cat:'Labs', text:'Drug level', note:'Nortriptyline only', offset: WEEK, freqLabel:'1 week after start/increase'},
+      {cat:'Labs', text:'LFTs', offset: SIX_WEEKS, freqLabel:'6 weeks after start/increase'},
+      {cat:'Other', text:'EKG', offset: WEEK, freqLabel:'1 week after start/increase'}
+    ],
+    monitoring: [
+      {cat:'Vitals', text:'Ht / Wt / BMI / BMI percentile, HR / BP / BP percentile', freq: THREE_MONTHS, freqLabel:'Every 3 months'},
+      {cat:'Labs', text:'LFTs', freq: THREE_MONTHS, freqLabel:'Every 3 months'},
+      {cat:'Other', text:'EKG', freq: SIX_MONTHS, freqLabel:'Every 6 months'}
+    ]
+  },
+  antidep_other: {
+    before: [],
+    baseline: [
+      {cat:'Vitals', text:'Ht / Wt / BMI / BMI percentile, HR / BP / BP percentile'},
+      {cat:'Labs', text:'CBC w/diff', note:'Mirtazapine only'},
+      {cat:'Labs', text:'LFTs', note:'Mirtazapine, Duloxetine only'}
+    ],
+    afterStart: [],
+    monitoring: [
+      {cat:'Vitals', text:'Ht / Wt / BMI / BMI percentile', freq: THREE_MONTHS, freqLabel:'Every 3 months (every month for Mirtazapine)'},
+      {cat:'Vitals', text:'HR / BP / BP percentile', freq: THREE_MONTHS, freqLabel:'Every 3 months'},
+      {cat:'Labs', text:'CBC w/diff, LFTs', freq: SIX_MONTHS, freqLabel:'Every 6 months'}
+    ]
+  },
+  antipsych_atypical: {
+    before: [
+      {cat:'Labs', text:'Negative pregnancy test (HCG)', femaleOnly:true}
+    ],
+    baseline: [
+      {cat:'Vitals', text:'Ht / Wt / BMI / BMI percentile, HR / BP / BP percentile'},
+      {cat:'Labs', text:'CBC w/diff, LFTs'},
+      {cat:'Labs', text:'Electrolytes, BUN/Cr'},
+      {cat:'Labs', text:'Glucose (Fasting)'},
+      {cat:'Labs', text:'Lipid Panel (Fasting)'},
+      {cat:'Labs', text:'TSH w/reflex to Free T4'},
+      {cat:'Labs', text:'HCG', femaleOnly:true},
+      {cat:'Labs', text:'Prolactin', note:'Risperidone, Paliperidone only'},
+      {cat:'Other', text:'AIMS'},
+      {cat:'Other', text:'EKG'}
+    ],
+    afterStart: [],
+    monitoring: [
+      {cat:'Vitals', text:'Ht / Wt / BMI / BMI percentile', freq: MONTH, freqLabel:'Every month'},
+      {cat:'Vitals', text:'HR / BP / BP percentile', freq: THREE_MONTHS, freqLabel:'Every 3 months'},
+      {cat:'Labs', text:'Glucose (Fasting), Lipid Panel (Fasting)', special:'3_6_then_6', freqLabel:'At 3 & 6 months, then every 6 months'},
+      {cat:'Labs', text:'LFTs', special:'3_then_12', freqLabel:'At 3 months, then every 12 months'},
+      {cat:'Labs', text:'Prolactin', note:'Risperidone, Paliperidone only', special:'6_12_then_12', freqLabel:'At 6 & 12 months, then every 12 months'},
+      {cat:'Labs', text:'CBC w/diff, Electrolytes, BUN/Cr', freq: TWELVE_MONTHS, freqLabel:'Every 12 months'},
+      {cat:'Other', text:'AIMS', freeform:true, note:'Pediatric patients: 3–6 months\nAdult patients: 6–12 months'},
+      {cat:'Other', text:'EKG', freq: TWELVE_MONTHS, freqLabel:'Every 12 months'}
+    ]
+  },
+  antipsych_typical: {
+    before: [
+      {cat:'Labs', text:'Negative pregnancy test (HCG)', femaleOnly:true}
+    ],
+    baseline: [
+      {cat:'Vitals', text:'Ht / Wt / BMI / BMI percentile, HR / BP / BP percentile'},
+      {cat:'Labs', text:'CBC w/diff, LFTs'},
+      {cat:'Labs', text:'Glucose (Fasting)'},
+      {cat:'Labs', text:'Lipid Panel (Fasting)'},
+      {cat:'Labs', text:'TSH w/reflex to Free T4'},
+      {cat:'Labs', text:'HCG', femaleOnly:true},
+      {cat:'Labs', text:'Prolactin'},
+      {cat:'Other', text:'AIMS'},
+      {cat:'Other', text:'EKG'}
+    ],
+    afterStart: [
+      {cat:'Other', text:'EKG', offset: WEEK, freqLabel:'1 week after start/increase'}
+    ],
+    monitoring: [
+      {cat:'Vitals', text:'Ht / Wt / BMI / BMI percentile, HR / BP / BP percentile', special:'monthly_x3_then_q3', freqLabel:'Every month x3, then every 3 months'},
+      {cat:'Labs', text:'CBC w/diff, Glucose (Fasting), Lipid Panel (Fasting), Prolactin', freq: SIX_MONTHS, freqLabel:'Every 6 months'},
+      {cat:'Other', text:'AIMS', freeform:true, note:'Pediatric patients: 3–6 months\nAdult patients: 6–12 months'},
+      {cat:'Other', text:'EKG', freq: TWELVE_MONTHS, freqLabel:'Every 12 months'}
+    ]
+  },
+  antipsych_clozaril: {
+    before: [
+      {cat:'Labs', text:'Negative pregnancy test (HCG)', femaleOnly:true}
+    ],
+    baseline: [
+      {cat:'Vitals', text:'Ht / Wt / BMI / BMI percentile, HR / BP / BP percentile'},
+      {cat:'Labs', text:'CBC w/diff, LFTs'},
+      {cat:'Labs', text:'Glucose (Fasting)'},
+      {cat:'Labs', text:'Lipid Panel (Fasting)'},
+      {cat:'Labs', text:'TSH w/reflex to Free T4'},
+      {cat:'Labs', text:'HCG', femaleOnly:true},
+      {cat:'Other', text:'AIMS'},
+      {cat:'Other', text:'EKG'}
+    ],
+    afterStart: [
+      {cat:'Labs', text:'Troponin, CRP', offset: 0, freqLabel:'Baseline, alongside ECG'},
+      {cat:'Other', text:'ECG', offset: 0, freqLabel:'Baseline, alongside troponin and CRP'},
+      {cat:'Labs', text:'Troponin, CRP', freq: WEEK, count: 4, freqLabel:'Weekly for the first 4 weeks after starting, to detect clozapine-induced myocarditis'},
+      {cat:'Other', text:'Bowel tracking', freeform:true, note:'Daily for 4 months'}
+    ],
+    monitoring: [
+      {cat:'Vitals', text:'Ht / Wt / BMI / BMI percentile', freq: MONTH, freqLabel:'Every month'},
+      {cat:'Vitals', text:'HR / BP / BP percentile', freq: THREE_MONTHS, freqLabel:'Every 3 months'},
+      {cat:'Labs', text:'ANC', special:'anc_clozapine', freqLabel:'Weekly for 6 months, then every 2 weeks for 6 months, then monthly thereafter'},
+      {cat:'Labs', text:'Glucose (Fasting), Lipid Panel (Fasting)', special:'3_6_then_6', freqLabel:'At 3 & 6 months, then every 6 months'},
+      {cat:'Labs', text:'LFTs', special:'3_then_12', freqLabel:'At 3 months, then every 12 months'},
+      {cat:'Other', text:'AIMS', freeform:true, note:'Pediatric patients: 3–6 months\nAdult patients: 6–12 months'},
+      {cat:'Other', text:'EKG', freq: TWELVE_MONTHS, freqLabel:'Every 12 months'}
+    ]
+  },
+  antipsych_muscarinic: {
+    before: [
+      {cat:'Labs', text:'Liver enzymes and bilirubin'},
+      {cat:'Vitals', text:'Heart rate (baseline)'},
+      {cat:'Vitals', text:'Blood pressure'}
+    ],
+    baseline: [],
+    afterStart: [
+      {cat:'Labs', text:'Liver enzymes and bilirubin', freeform:true, note:'Recheck as clinically indicated'},
+      {cat:'Other', text:'Urinary retention screening', freeform:true, note:'Screen for hesitancy, weak stream, dysuria'},
+      {cat:'Other', text:'CNS and anticholinergic effects', freeform:true, note:'Screen for dizziness, confusion, somnolence, cognitive changes'}
+    ],
+    monitoring: [
+      {cat:'Vitals', text:'HR and BP', freeform:true, note:'At regular intervals'}
+    ]
+  },
+  anticonv_depakote: {
+    before: [
+      {cat:'Labs', text:'Negative pregnancy test (HCG)', femaleOnly:true}
+    ],
+    baseline: [
+      {cat:'Vitals', text:'Ht / Wt / BMI / BMI percentile, HR / BP / BP percentile'},
+      {cat:'Labs', text:'CBC w/diff'},
+      {cat:'Labs', text:'CMP'},
+      {cat:'Labs', text:'TSH w/reflex to Free T4'},
+      {cat:'Labs', text:'Amylase'},
+      {cat:'Labs', text:'Lipase'},
+      {cat:'Labs', text:'U/A'},
+      {cat:'Labs', text:'HCG', femaleOnly:true},
+      {cat:'Labs', text:'Drug level'}
+    ],
+    afterStart: [
+      {cat:'Labs', text:'Drug level', offset: WEEK, freqLabel:'1 week after start/increase'}
+    ],
+    monitoring: [
+      {cat:'Vitals', text:'Ht / Wt / BMI / BMI percentile', freq: MONTH, freqLabel:'Every month'},
+      {cat:'Vitals', text:'HR / BP / BP percentile', special:'1mo_then_q3', freqLabel:'1 month after start, then every 3 months'},
+      {cat:'Labs', text:'CBC w/diff, LFTs, Drug level', special:'1mo_then_q3', freqLabel:'1 month after start, then every 3 months'}
+    ]
+  },
+  anticonv_lamictal: {
+    before: [
+      {cat:'Labs', text:'Negative pregnancy test (HCG)', femaleOnly:true}
+    ],
+    baseline: [
+      {cat:'Vitals', text:'Ht / Wt / BMI / BMI percentile, HR / BP / BP percentile'},
+      {cat:'Labs', text:'CBC w/diff'},
+      {cat:'Labs', text:'CMP'},
+      {cat:'Labs', text:'TSH w/reflex to Free T4'},
+      {cat:'Labs', text:'HCG', femaleOnly:true}
+    ],
+    afterStart: [
+      {cat:'Other', text:'Dose titration', freeform:true, note:'Increase low and slow — every 2 weeks'},
+      {cat:'Other', text:'Stevens-Johnson Syndrome / Toxic Epidermal Necrolysis', freeform:true, note:'Monitor for rash and other signs, especially during titration'}
+    ],
+    monitoring: [
+      {cat:'Vitals', text:'Ht / Wt / BMI / BMI percentile, HR / BP / BP percentile', freq: THREE_MONTHS, freqLabel:'Every 3 months'},
+      {cat:'Labs', text:'TSH w/reflex to Free T4', freq: TWELVE_MONTHS, freqLabel:'Every 12 months'}
+    ]
+  },
+  anticonv_other: {
+    before: [
+      {cat:'Labs', text:'Negative pregnancy test (HCG)', femaleOnly:true}
+    ],
+    baseline: [
+      {cat:'Vitals', text:'Ht / Wt / BMI / BMI percentile, HR / BP / BP percentile'},
+      {cat:'Labs', text:'CBC w/diff'},
+      {cat:'Labs', text:'CMP'},
+      {cat:'Labs', text:'TSH w/reflex to Free T4'},
+      {cat:'Labs', text:'U/A'},
+      {cat:'Labs', text:'HCG', femaleOnly:true},
+      {cat:'Labs', text:'Drug level'},
+      {cat:'Labs', text:'HLA-B 1502 antigen', note:'Carbamazepine only, Asian population only'},
+      {cat:'Other', text:'EKG'}
+    ],
+    afterStart: [
+      {cat:'Labs', text:'Drug level', offset: WEEK, freqLabel:'1 week after start/increase'}
+    ],
+    monitoring: [
+      {cat:'Vitals', text:'Ht / Wt / BMI / BMI percentile, HR / BP / BP percentile', freq: THREE_MONTHS, freqLabel:'Every 3 months'},
+      {cat:'Labs', text:'CMP, Drug level', freq: THREE_MONTHS, freqLabel:'Every 3 months'},
+      {cat:'Labs', text:'TSH w/reflex to Free T4', freq: TWELVE_MONTHS, freqLabel:'Every 12 months'},
+      {cat:'Other', text:'EKG', freq: TWELVE_MONTHS, freqLabel:'Every 12 months'}
+    ]
+  },
+  anticonv_topiramate: {
+    before: [
+      {cat:'Labs', text:'Negative pregnancy test (HCG)', femaleOnly:true}
+    ],
+    baseline: [
+      {cat:'Labs', text:'CBC w/diff'},
+      {cat:'Labs', text:'CMP'},
+      {cat:'Labs', text:'Serum bicarbonate'},
+      {cat:'Vitals', text:'Weight and height'}
+    ],
+    afterStart: [
+      {cat:'Labs', text:'Serum bicarbonate level', freeform:true, note:'Can cause hyperchloremic non-anion gap metabolic acidosis'},
+      {cat:'Labs', text:'Renal function'},
+      {cat:'Vitals', text:'Weight and growth'},
+      {cat:'Other', text:'Acute visual changes / eye pain / blurred vision', freeform:true, note:'May be indicative of secondary angle-closure glaucoma (rare emergency)'}
+    ],
+    monitoring: [
+      {cat:'Labs', text:'Drug level', freeform:true, note:'Routine blood level testing is not standard; however, therapeutic range considered 5.0–20.0 mcg/mL'}
+    ]
+  },
+  lithium: {
+    before: [
+      {cat:'Labs', text:'Negative pregnancy test (HCG)', femaleOnly:true},
+      {cat:'Other', text:'EKG'},
+      {cat:'Other', text:'Stop NSAIDs'}
+    ],
+    baseline: [
+      {cat:'Vitals', text:'Ht / Wt / BMI / BMI percentile, HR / BP / BP percentile'},
+      {cat:'Labs', text:'CBC w/diff'},
+      {cat:'Labs', text:'Chem7'},
+      {cat:'Labs', text:'TSH w/reflex to Free T4'},
+      {cat:'Labs', text:'U/A'},
+      {cat:'Labs', text:'HCG', femaleOnly:true},
+      {cat:'Labs', text:'Drug level'},
+      {cat:'Other', text:'EKG'}
+    ],
+    afterStart: [
+      {cat:'Labs', text:'Drug level', offset: WEEK, freqLabel:'1 week after start/increase'},
+      {cat:'Other', text:'EKG', offset: WEEK, freqLabel:'1 week after start/increase'}
+    ],
+    monitoring: [
+      {cat:'Vitals', text:'Ht / Wt / BMI / BMI percentile', freq: MONTH, freqLabel:'Every month'},
+      {cat:'Vitals', text:'HR / BP / BP percentile', freq: THREE_MONTHS, freqLabel:'Every 3 months'},
+      {cat:'Labs', text:'CBC w/diff, Chem7, TSH w/reflex to Free T4, U/A, Drug level', freq: FOUR_MONTHS, freqLabel:'Every 4 months'},
+      {cat:'Other', text:'EKG', freq: TWELVE_MONTHS, freqLabel:'Every 12 months'}
+    ]
+  },
+  antihypertensive: {
+    before: [
+      {cat:'Vitals', text:'HR / BP / BP percentile'}
+    ],
+    baseline: [
+      {cat:'Vitals', text:'Ht / Wt / BMI / BMI percentile, HR / BP / BP percentile'}
+    ],
+    afterStart: [
+      {cat:'Vitals', text:'HR / BP / BP percentile', offset: WEEK, freqLabel:'1 week after start/increase'}
+    ],
+    monitoring: [
+      {cat:'Vitals', text:'Ht / Wt / BMI / BMI percentile, HR / BP / BP percentile', freq: THREE_MONTHS, freqLabel:'Every 3 months'}
+    ]
+  }
+};
+
+const DEFAULT_MEDICATIONS = [
+  {generic:"Amitriptyline", brand:"Elavil", classId:"tca",
+    adultDose:"75–300 mg/day", pediatricDose:"Not FDA-approved for pediatric/adolescent use"},
+  {generic:"Aripiprazole", brand:"Abilify", classId:"antipsych_atypical",
+    adultDose:"10–30 mg/day (2–15 mg/day as MDD adjunct)", pediatricDose:"2–20 mg/day (ages 6–17; range varies by indication)"},
+  {generic:"Atomoxetine", brand:"Strattera", classId:"adhd_nonstim",
+    adultDose:"40–100 mg/day", pediatricDose:"0.5–1.4 mg/kg/day, max 100 mg/day (ages 6+)"},
+  {generic:"Bupropion", brand:"Wellbutrin, Zyban", classId:"antidep_other",
+    adultDose:"200–450 mg/day", pediatricDose:"Not FDA-approved for pediatric/adolescent use"},
+  {generic:"Carbamazepine", brand:"Tegretol, Equetro", classId:"anticonv_other",
+    adultDose:"400–1200 mg/day (up to 1600 mg/day in some cases)", pediatricDose:"10–35 mg/kg/day (under age 6); 200–1000 mg/day (ages 6–12)"},
+  {generic:"Chlorpromazine", brand:"Thorazine", classId:"antipsych_typical",
+    adultDose:"30–800 mg/day (higher doses used in refractory cases)", pediatricDose:"Not well-established in current FDA labeling for psychiatric indications — verify before use"},
+  {generic:"Citalopram", brand:"Celexa", classId:"ssri",
+    adultDose:"20–40 mg/day", pediatricDose:"Not FDA-approved for pediatric/adolescent use"},
+  {generic:"Clomipramine", brand:"Anafranil", classId:"tca",
+    adultDose:"25–250 mg/day (OCD)", pediatricDose:"Up to 3 mg/kg/day or 200 mg/day, whichever is less (ages 10+, OCD)"},
+  {generic:"Clonidine", brand:"Catapress, Kapvay", classId:"antihypertensive",
+    adultDose:"0.2–0.6 mg/day (Catapres, hypertension)", pediatricDose:"0.1–0.4 mg/day (Kapvay, ADHD, ages 6–17)"},
+  {generic:"Clozapine", brand:"Clozaril, Fazaclo", classId:"antipsych_clozaril",
+    adultDose:"12.5–900 mg/day (target 300–450 mg/day)", pediatricDose:"Not FDA-approved for pediatric/adolescent use"},
+  {generic:"Desipramine", brand:"Norpramin", classId:"tca",
+    adultDose:"100–300 mg/day", pediatricDose:"25–150 mg/day (adolescents; exact FDA age cutoff not specified in labeling)"},
+  {generic:"Dexmethylphenidate", brand:"Focalin", classId:"adhd_stim",
+    adultDose:"5–20 mg/day", pediatricDose:"5–20 mg/day (ages 6+)"},
+  {generic:"Dextroamphetamine", brand:"Dexedrine, Dextrostat", classId:"adhd_stim",
+    adultDose:"5–60 mg/day (up to 40 mg/day ADHD; up to 60 mg/day narcolepsy)", pediatricDose:"2.5–40 mg/day (ADHD, ages 3+); narcolepsy up to 60 mg/day (ages 6+)"},
+  {generic:"Dextroamphetamine / Amphetamine", brand:"Adderall", classId:"adhd_stim",
+    adultDose:"5–40 mg/day (up to 60 mg/day narcolepsy)", pediatricDose:"2.5–40 mg/day (ages 3–5); 5–40 mg/day (ages 6+)"},
+  {generic:"Divalproex Sodium", brand:"Depakote", classId:"anticonv_depakote",
+    adultDose:"750–3000 mg/day (mania); 10–60 mg/kg/day (epilepsy)", pediatricDose:"Not FDA-approved for pediatric mania; 10–60 mg/kg/day for epilepsy adjunct (ages 2+)"},
+  {generic:"Duloxetine", brand:"Cymbalta", classId:"antidep_other",
+    adultDose:"40–120 mg/day", pediatricDose:"30–120 mg/day, weight-based, max 60 mg/day if <45 kg (GAD only, ages 7+)"},
+  {generic:"Escitalopram", brand:"Lexapro", classId:"ssri",
+    adultDose:"10–20 mg/day", pediatricDose:"10–20 mg/day (MDD, ages 12–17)"},
+  {generic:"Fluoxetine", brand:"Prozac, Sarafem", classId:"ssri",
+    adultDose:"20–80 mg/day", pediatricDose:"10–60 mg/day (OCD, ages 7–17); 10–20 mg/day (MDD, ages 8–18)"},
+  {generic:"Fluphenazine", brand:"Prolixin", classId:"antipsych_typical",
+    adultDose:"1–40 mg/day", pediatricDose:"Not FDA-approved for pediatric/adolescent use"},
+  {generic:"Iloperidone", brand:"Fanapt", classId:"antipsych_atypical",
+    adultDose:"2–24 mg/day", pediatricDose:"Not FDA-approved for pediatric/adolescent use"},
+  {generic:"Cariprazine", brand:"Vraylar", classId:"antipsych_atypical",
+    adultDose:"1.5–6 mg/day", pediatricDose:"Not FDA-approved for pediatric/adolescent use"},
+  {generic:"Lumateperone", brand:"Caplyta", classId:"antipsych_atypical",
+    adultDose:"42 mg/day (fixed dose, no titration)", pediatricDose:"Not FDA-approved for pediatric/adolescent use"},
+  {generic:"Lurasidone", brand:"Latuda", classId:"antipsych_atypical",
+    adultDose:"20–160 mg/day", pediatricDose:"20–80 mg/day (bipolar depression, ages 10–17); 40–80 mg/day (schizophrenia, ages 13–17)"},
+  {generic:"Fluvoxamine", brand:"Luvox", classId:"ssri",
+    adultDose:"50–300 mg/day (OCD)", pediatricDose:"25–200 mg/day (ages 8–11); 25–300 mg/day (ages 12–17) — OCD only"},
+  {generic:"Guanfacine", brand:"Intuniv, Tenex", classId:"antihypertensive",
+    adultDose:"1–3 mg/day (Tenex, hypertension)", pediatricDose:"1–7 mg/day, weight-based (Intuniv ER, ADHD, ages 6–17)"},
+  {generic:"Haloperidol", brand:"Haldol", classId:"antipsych_typical",
+    adultDose:"1–15 mg/day (up to 100 mg/day in severe/resistant cases)", pediatricDose:"0.05–0.15 mg/kg/day (ages 3–12); adult dosing for ages 13+"},
+  {generic:"Imipramine", brand:"Tofranil", classId:"tca",
+    adultDose:"75–200 mg/day (up to 300 mg/day hospitalized)", pediatricDose:"25–75 mg/day, max 2.5 mg/kg/day (enuresis only, ages 6+); not approved for pediatric depression"},
+  {generic:"Lamotrigine", brand:"Lamictal", classId:"anticonv_lamictal",
+    adultDose:"100–400 mg/day (225–400 mg/day epilepsy adjunct; 100–400 mg/day bipolar maintenance)", pediatricDose:"4.5–15 mg/kg/day, max 200–400 mg/day (epilepsy, ages 2–12); not FDA-approved for pediatric bipolar disorder"},
+  {generic:"Lisdexamfetamine", brand:"Vyvanse", classId:"adhd_stim",
+    adultDose:"30–70 mg/day", pediatricDose:"30–70 mg/day (ADHD, ages 6–17)"},
+  {generic:"Lithium", brand:"Eskalith, Lithobid", classId:"lithium",
+    adultDose:"900–1800 mg/day", pediatricDose:"Same as adult dosing, established for ages 12+; not established under age 12"},
+  {generic:"Methylphenidate", brand:"Concerta, Daytrana, Metadate, Methylin, Quillivant, Ritalin", classId:"adhd_stim",
+    adultDose:"18–72 mg/day (Concerta ER; varies by formulation)", pediatricDose:"18–72 mg/day (ages 6–17; max varies by age and formulation)"},
+  {generic:"Mirtazapine", brand:"Remeron", classId:"antidep_other",
+    adultDose:"15–45 mg/day", pediatricDose:"Not FDA-approved for pediatric/adolescent use"},
+  {generic:"Nortriptyline", brand:"Aventyl, Pamelor", classId:"tca",
+    adultDose:"75–150 mg/day", pediatricDose:"Not FDA-approved for pediatric/adolescent use"},
+  {generic:"Olanzapine", brand:"Zyprexa", classId:"antipsych_atypical",
+    adultDose:"5–20 mg/day", pediatricDose:"2.5–20 mg/day (ages 13–17)"},
+  {generic:"Oxcarbazepine", brand:"Trileptal", classId:"anticonv_other",
+    adultDose:"600–1200 mg/day (adjunctive)", pediatricDose:"Weight-based, up to 900–1800 mg/day depending on weight (ages 4–16)"},
+  {generic:"Paliperidone", brand:"Invega", classId:"antipsych_atypical",
+    adultDose:"6–12 mg/day", pediatricDose:"3–12 mg/day (ages 12–17)"},
+  {generic:"Perphenazine", brand:"Trilafon", classId:"antipsych_typical",
+    adultDose:"12–64 mg/day", pediatricDose:"Same as adult dosing, established for ages 12–17; not established under age 12"},
+  {generic:"Prazosin", brand:"Minipress", classId:"antihypertensive",
+    adultDose:"1–20 mg/day (up to 40 mg/day in some patients)", pediatricDose:"Not FDA-approved for pediatric/adolescent use"},
+  {generic:"Propranolol", brand:"Inderal", classId:"antihypertensive",
+    adultDose:"30–640 mg/day (highly indication-dependent)", pediatricDose:"1–4 mg/kg/day, max 640 mg/day (hypertension, ages 1–17); 1.2–3.4 mg/kg/day (infantile hemangioma, ages 5 weeks–5 months)"},
+  {generic:"Quetiapine", brand:"Seroquel", classId:"antipsych_atypical",
+    adultDose:"150–800 mg/day", pediatricDose:"400–800 mg/day (schizophrenia, ages 13–17); 400–600 mg/day (bipolar mania, ages 10–17)"},
+  {generic:"Risperidone", brand:"Risperdal", classId:"antipsych_atypical",
+    adultDose:"2–16 mg/day", pediatricDose:"Up to 6 mg/day (schizophrenia ages 13+, bipolar I ages 10+); 0.5–3 mg/day weight-based (autism irritability, ages 5–17)"},
+  {generic:"Sertraline", brand:"Zoloft", classId:"ssri",
+    adultDose:"50–200 mg/day", pediatricDose:"25–200 mg/day (OCD, ages 6–12); 50–200 mg/day (OCD, ages 13–17); not approved for pediatric depression"},
+  {generic:"Thiothixene", brand:"Navane", classId:"antipsych_typical",
+    adultDose:"15–60 mg/day", pediatricDose:"Same as adult dosing, established for ages 12+; not established under age 12"},
+  {generic:"Topiramate", brand:"Topamax", classId:"anticonv_topiramate",
+    adultDose:"200–400 mg/day (epilepsy); 100 mg/day (migraine prophylaxis)", pediatricDose:"150–400 mg/day weight-based (epilepsy, ages 2–9); adult dosing for ages 10+; 100 mg/day (migraine prophylaxis, ages 12+)"},
+  {generic:"Trazodone", brand:"Desyrel", classId:"antidep_other",
+    adultDose:"150–400 mg/day (up to 600 mg/day inpatient)", pediatricDose:"Not FDA-approved for pediatric/adolescent use"},
+  {generic:"Valproic Acid", brand:"Depakene", classId:"anticonv_depakote",
+    adultDose:"10–60 mg/kg/day", pediatricDose:"Same as adult dosing, established for ages 10+; not established under age 10 for monotherapy"},
+  {generic:"Xanomeline and Trospium Chloride", brand:"Cobenfy", classId:"antipsych_muscarinic",
+    adultDose:"100 mg/20 mg to 250 mg/60 mg per day (xanomeline/trospium combined); reduced max in patients 65+", pediatricDose:"Not FDA-approved for pediatric/adolescent use"},
+  {generic:"Ziprasidone", brand:"Geodon", classId:"antipsych_atypical",
+    adultDose:"40–200 mg/day (schizophrenia); 80–160 mg/day (bipolar mania)", pediatricDose:"Not FDA-approved for pediatric/adolescent use"}
+].sort((a,b)=>a.generic.localeCompare(b.generic));
+
+const ADMISSION_ALL = {
+  vitals:"HR, BP, HT, WT, BMI, RR, Temp",
+  labs:"HCG",
+  note:"See each medication's guideline above for additional labs and tests."
+};
+const ROUTINE_ALL = "HR, BP, HT, WT, BMI — every 3 months, for all clients regardless of medication.";
+
+const ABBREV_VITALS = [
+  ["HT","Height"],["RR","Respiratory Rate"],["Temp","Temperature"],["WT","Weight"],
+  ["BMI","Body Mass Index"],["BP","Blood Pressure"],["HR","Heart Rate"]
+];
+const ABBREV_TESTS = [
+  ["AIMS","Abnormal Involuntary Movement Scale"],["EEG","Electroencephalogram"],["EKG","Electrocardiogram"]
+];
+const ABBREV_LABS = [
+  ["BMP","Basic Metabolic Panel","Calcium, Carbon Dioxide, Chloride, Creatinine, Glucose, Potassium, Sodium, Urea Nitrogen (BUN)"],
+  ["CBC w/diff","Complete Blood Count w/ Differential","WBC, RBC, Hemoglobin, Hematocrit, MCV, MCH, MCHC, RDW, Platelet, MPV and WBC Differential"],
+  ["CMP","Comprehensive Metabolic Panel","Albumin, Alkaline Phosphatase, ALT, AST, Calcium, Carbon Dioxide, Chloride, Creatinine, Glucose, Potassium, Sodium, Total Bilirubin, Total Protein, Urea Nitrogen (BUN)"],
+  ["HCG","HCG (Pregnancy Test)","Serum/Blood or Urine HCG (Qualitative)"],
+  ["LFTs","Liver Function Tests (Hepatic Function Panel)","Total Protein, Albumin, Total Bilirubin, Direct Bilirubin, Alkaline Phosphatase, AST, ALT"],
+  ["Lipids","Lipid Panel","Total Cholesterol, HDL Cholesterol, Triglycerides"],
+  ["TSH w/reflex to T4","Thyroid Stimulating Hormone With Reflex to Free-T4","Thyroid Stimulating Hormone (and, if abnormal, Free-T4)"],
+  ["U/A","Urine Analysis, Macroscopic (UA Dipstick)","pH, Appearance, Occult blood, Color, Specific Gravity, Protein, Ketones, Glucose"],
+  ["WBC w/diff","White Blood Cell Count w/ Differential","WBC and Differential"]
+];
+
+/* ============================= LIVE DATA (Google Sheets sync) ============================= */
+// These start as the built-in defaults above, and are replaced in place after a
+// successful sync with a connected Google Sheet. Everything else in the app reads
+// these same identifiers, so once reassigned, every screen reflects the sheet data.
+let CLASS_GROUPS = DEFAULT_CLASS_GROUPS;
+let CLASS_DATA = DEFAULT_CLASS_DATA;
+let MEDICATIONS = DEFAULT_MEDICATIONS;
+
+const SHEET_SOURCE_KEY = 'medAppSheetSource';
+const SECTION_KEYS = ['before', 'baseline', 'afterStart', 'monitoring'];
+
+function loadSavedSheetSource(){
+  try { return localStorage.getItem(SHEET_SOURCE_KEY) || ''; }
+  catch(e){ return ''; }
+}
+function saveSheetSource(val){
+  try {
+    if(val) localStorage.setItem(SHEET_SOURCE_KEY, val);
+    else localStorage.removeItem(SHEET_SOURCE_KEY);
+  } catch(e){ /* storage unavailable; sync will just need to be re-entered next visit */ }
+}
+
+function extractSheetId(input){
+  const trimmed = (input || '').trim();
+  const m = trimmed.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  if(m) return m[1];
+  if(/^[a-zA-Z0-9-_]{20,}$/.test(trimmed)) return trimmed;
+  return null;
+}
+
+// Minimal RFC4180-style CSV parser (handles quoted fields, embedded commas/newlines, "" escapes).
+// Loads one sheet tab via Google's visualization ("gviz") JSONP endpoint rather than
+// fetch(). A plain fetch() to docs.google.com is blocked by CORS when this app is opened
+// as a local file:// page (and on some hosts even when it isn't) — Google's response to a
+// restricted/unshared sheet is a login redirect with no Access-Control-Allow-Origin header,
+// which the browser reports back to JS only as a generic "Failed to fetch". A <script> tag
+// is not subject to that CORS check, so this works reliably regardless of how the page
+// itself is hosted; it still requires the sheet to be shared as "Anyone with the link".
+function loadSheetTabJSONP(sheetId, tabName){
+  return new Promise((resolve, reject)=>{
+    const cbName = '__sheetCb_' + Math.random().toString(36).slice(2) + Date.now();
+    let settled = false;
+    const cleanup = ()=>{
+      try{ delete window[cbName]; }catch(e){ window[cbName] = undefined; }
+      if(script.parentNode) script.parentNode.removeChild(script);
+      clearTimeout(timer);
+    };
+    window[cbName] = function(resp){
+      if(settled) return;
+      settled = true;
+      cleanup();
+      if(!resp || resp.status === 'error'){
+        const detail = (resp && resp.errors && resp.errors[0] && (resp.errors[0].detailed_message || resp.errors[0].message)) || `no tab named exactly "${tabName}" was found`;
+        reject(new Error(`Could not read the "${tabName}" tab: ${detail}.`));
+        return;
+      }
+      resolve(resp.table || {cols:[], rows:[]});
+    };
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json;responseHandler:${cbName}&headers=1&sheet=${encodeURIComponent(tabName)}`;
+    const script = document.createElement('script');
+    script.src = url;
+    script.onerror = ()=>{
+      if(settled) return;
+      settled = true;
+      cleanup();
+      reject(new Error(`Could not reach Google Sheets for the "${tabName}" tab. Check your internet connection and the sheet link.`));
+    };
+    const timer = setTimeout(()=>{
+      if(settled) return;
+      settled = true;
+      cleanup();
+      reject(new Error(`The "${tabName}" tab didn't respond. Make sure the sheet is shared via Share > General access > "Anyone with the link" (Viewer), and that a tab named exactly "${tabName}" exists.`));
+    }, 10000);
+    document.head.appendChild(script);
+  });
+}
+
+function gvizTableToObjects(table){
+  const headers = (table.cols || []).map(c => (c.label || c.id || '').trim());
+  return (table.rows || []).map(r=>{
+    const obj = {};
+    (r.c || []).forEach((cell, i)=>{
+      const h = headers[i];
+      if(!h) return;
+      const raw = (cell && cell.v !== undefined && cell.v !== null) ? cell.v : '';
+      obj[h] = (typeof raw === 'string') ? raw.trim() : String(raw);
+    });
+    return obj;
+  }).filter(obj => Object.values(obj).some(v => v !== ''));
+}
+
+function buildClassDataFromRows(rows, knownClassIds){
+  const data = {};
+  knownClassIds.forEach(cid=>{
+    data[cid] = {before:[], baseline:[], afterStart:[], monitoring:[]};
+  });
+  rows.forEach(r=>{
+    const cid = r.classId;
+    const section = r.section;
+    if(!cid || !SECTION_KEYS.includes(section)) return;
+    if(!data[cid]) data[cid] = {before:[], baseline:[], afterStart:[], monitoring:[]};
+    const item = { cat: r.cat || 'Other', text: r.text || '' };
+    if(String(r.freeform).toUpperCase() === 'TRUE') item.freeform = true;
+    if(r.note) item.note = r.note;
+    if(r.freqLabel) item.freqLabel = r.freqLabel;
+    item._order = Number(r.order) || 0;
+    data[cid][section].push(item);
+  });
+  Object.values(data).forEach(cls=>{
+    SECTION_KEYS.forEach(s=>{
+      cls[s].sort((a,b)=>a._order-b._order);
+      cls[s].forEach(it=>delete it._order);
+    });
+  });
+  return data;
+}
+
+async function syncFromGoogleSheet(sheetSource){
+  const sheetId = extractSheetId(sheetSource);
+  if(!sheetId) throw new Error('That doesn\'t look like a valid Google Sheet link or ID.');
+
+  const [medsTable, classesTable, itemsTable] = await Promise.all([
+    loadSheetTabJSONP(sheetId, 'Medications'),
+    loadSheetTabJSONP(sheetId, 'Classes'),
+    loadSheetTabJSONP(sheetId, 'MonitoringItems')
+  ]);
+
+  const medRows = gvizTableToObjects(medsTable);
+  const classRows = gvizTableToObjects(classesTable);
+  const itemRows = gvizTableToObjects(itemsTable);
+
+  if(medRows.length===0) throw new Error('The "Medications" tab has no data rows.');
+  if(classRows.length===0) throw new Error('The "Classes" tab has no data rows.');
+
+  const newClassGroups = {};
+  classRows.forEach(r=>{
+    if(!r.classId) return;
+    newClassGroups[r.classId] = { name: r.name || r.classId, group: r.group || '' };
+  });
+
+  const newMedications = medRows
+    .filter(r=>r.generic)
+    .map(r=>({
+      generic: r.generic,
+      brand: r.brand || '',
+      classId: r.classId || '',
+      adultDose: r.adultDose || '',
+      pediatricDose: r.pediatricDose || ''
+    }))
+    .sort((a,b)=>a.generic.localeCompare(b.generic));
+
+  const missingClass = newMedications.find(m=>!newClassGroups[m.classId]);
+  if(missingClass) throw new Error(`"${missingClass.generic}" references classId "${missingClass.classId}", which isn't in the Classes tab.`);
+
+  const newClassData = buildClassDataFromRows(itemRows, Object.keys(newClassGroups));
+
+  // All parsed successfully — swap the live data in place.
+  CLASS_GROUPS = newClassGroups;
+  CLASS_DATA = newClassData;
+  MEDICATIONS = newMedications;
+
+  return { medCount: newMedications.length, classCount: Object.keys(newClassGroups).length };
+}
+
+/* ============================= STATE ============================= */
+let state = {
+  tab: 'search',
+  searchQuery: '',
+  activeGroup: 'All',
+  selectedMedIndex: null,
+  sheetSource: loadSavedSheetSource(),
+  syncStatus: 'idle',      // idle | loading | success | error
+  syncMessage: '',
+  lastSyncedAt: null
+};
+
+/* ============================= RENDER HELPERS ============================= */
+function el(tag, attrs={}, children=[]){
+  const e = document.createElement(tag);
+  for(const k in attrs){
+    if(k==='class') e.className = attrs[k];
+    else if(k==='html') e.innerHTML = attrs[k];
+    else if(k.startsWith('on') && typeof attrs[k]==='function') e.addEventListener(k.slice(2), attrs[k]);
+    else e.setAttribute(k, attrs[k]);
+  }
+  (Array.isArray(children)?children:[children]).forEach(c=>{
+    if(c===null||c===undefined) return;
+    if(typeof c==='string') e.appendChild(document.createTextNode(c));
+    else e.appendChild(c);
+  });
+  return e;
+}
+
+function itemFreqLabel(it){
+  if(it.freeform) return it.note || '';
+  if(it.freqLabel) return it.freqLabel;
+  return '';
+}
+
+/* ============================= TABS ============================= */
+const TABS = [
+  {id:'search', label:'Medication Search'},
+  {id:'reference', label:'Labs/Tests'}
+];
+
+function renderNav(){
+  const nav = document.getElementById('tabNav');
+  nav.innerHTML='';
+  TABS.forEach(t=>{
+    const b = el('button',{class: t.id===state.tab?'active':'', onclick:()=>{ state.tab=t.id; state.selectedMedIndex=null; render(); }}, t.label);
+    nav.appendChild(b);
+  });
+}
+
+/* ============================= SEARCH / MED LIST ============================= */
+function renderSearch(container){
+  container.appendChild(el('h1',{class:'page-title'}, 'Find a medication'));
+  container.appendChild(el('p',{class:'page-sub'}, 'Search by generic or brand name, or filter by class, to view the required vitals, labs and tests before starting, at baseline, after a dose change, and for ongoing monitoring.'));
+
+  const searchRow = el('div',{class:'search-row'});
+  const input = el('input',{class:'search-input', placeholder:'Search medications (e.g. "Zoloft" or "Risperidone")', value: state.searchQuery});
+  input.addEventListener('input', e=>{ state.searchQuery = e.target.value; renderMedGrid(grid); });
+  searchRow.appendChild(input);
+  container.appendChild(searchRow);
+
+  const groups = ['All', ...Array.from(new Set(Object.values(CLASS_GROUPS).map(g=>g.group)))];
+  const chipRow = el('div',{class:'chip-row'});
+  groups.forEach(g=>{
+    const chip = el('button',{class:'chip'+(state.activeGroup===g?' active':''), onclick:()=>{ state.activeGroup=g; renderChips(chipRow); renderMedGrid(grid); }}, g);
+    chipRow.appendChild(chip);
+  });
+  container.appendChild(chipRow);
+
+  const grid = el('div',{class:'med-grid'});
+  container.appendChild(grid);
+  renderMedGrid(grid);
+
+  function renderChips(row){
+    Array.from(row.children).forEach(c=>c.classList.toggle('active', c.textContent===state.activeGroup));
+  }
+}
+
+function filteredMeds(){
+  const q = state.searchQuery.trim().toLowerCase();
+  return MEDICATIONS
+    .map((m,i)=>({...m, idx:i}))
+    .filter(m=>{
+      const groupOk = state.activeGroup==='All' || CLASS_GROUPS[m.classId].group===state.activeGroup;
+      const textOk = !q || m.generic.toLowerCase().includes(q) || m.brand.toLowerCase().includes(q);
+      return groupOk && textOk;
+    });
+}
+
+function renderMedGrid(grid){
+  grid.innerHTML='';
+  const meds = filteredMeds();
+  if(meds.length===0){
+    grid.appendChild(el('div',{class:'empty-note'}, 'No medications match your search.'));
+    return;
+  }
+  meds.forEach(m=>{
+    const card = el('div',{class:'med-card'});
+    const btn = el('button',{class:'card-open', onclick:()=>{ state.tab='medDetail'; state.selectedMedIndex=m.idx; render(); }},[
+      el('div',{class:'med-generic'}, m.generic),
+      el('div',{class:'med-brand'}, m.brand),
+      el('div',{class:'class-tag'}, CLASS_GROUPS[m.classId].name)
+    ]);
+    card.appendChild(btn);
+    grid.appendChild(card);
+  });
+}
+
+/* ============================= MED DETAIL ============================= */
+function renderSectionCard(title, hint, items){
+  const card = el('div',{class:'section-card'});
+  card.appendChild(el('h3',null,title));
+  if(hint) card.appendChild(el('div',{class:'section-hint'}, hint));
+  if(items.length===0){
+    card.appendChild(el('div',{class:'item-row'},[ el('div',{class:'item-text', style:'color:#9aa0b4;'}, 'N/A') ]));
+  } else {
+    items.forEach(it=>{
+      const row = el('div',{class:'item-row'});
+      row.appendChild(el('span',{class:'cat-tag '+it.cat}, it.cat));
+      const textWrap = el('div',{class:'item-text'});
+      textWrap.appendChild(document.createTextNode(it.text));
+      if(it.note && !it.freeform) textWrap.appendChild(el('div',{class:'item-note'}, it.note));
+      row.appendChild(textWrap);
+      const freq = itemFreqLabel(it);
+      if(freq) row.appendChild(el('div',{class:'item-freq'}, freq));
+      card.appendChild(row);
+    });
+  }
+  return card;
+}
+
+function renderMedDetail(container){
+  const m = MEDICATIONS[state.selectedMedIndex];
+  const cls = CLASS_DATA[m.classId];
+  container.appendChild(el('button',{class:'back-link', onclick:()=>{ state.tab='search'; render(); }}, '← Back to search'));
+
+  const header = el('div',{class:'med-header'},[
+    el('div',null,[
+      el('h1',null, m.generic),
+      el('div',{class:'brand-line'}, 'Brand: ' + m.brand),
+      el('span',{class:'class-tag'}, CLASS_GROUPS[m.classId].name)
+    ])
+  ]);
+  container.appendChild(header);
+
+  if(m.adultDose || m.pediatricDose){
+    container.appendChild(el('div',{class:'section-card'},[
+      el('h3',null,'FDA-Approved Dosing'),
+      el('div',{style:'margin-bottom:8px;'},[
+        el('div',{class:'item-note', style:'margin-bottom:2px;'}, 'Adult'),
+        el('div',{class:'item-text'}, m.adultDose || 'Not specified')
+      ]),
+      el('div',null,[
+        el('div',{class:'item-note', style:'margin-bottom:2px;'}, 'Pediatric'),
+        el('div',{class:'item-text'}, m.pediatricDose || 'Not specified')
+      ])
+    ]));
+  }
+
+  container.appendChild(renderSectionCard('Before Starting', 'May be done up to 1 week before starting; results must be reviewed before medication is given.', cls.before));
+  container.appendChild(renderSectionCard('Baseline / Admission', 'May be done up to 3 months before / 1 week after starting (vitals: up to 1 month before / 1 week after).', cls.baseline));
+  container.appendChild(renderSectionCard('After Start / Dose Increase', '', cls.afterStart));
+  container.appendChild(renderSectionCard('Ongoing Monitoring', '', cls.monitoring));
+}
+
+/* ============================= REFERENCE ============================= */
+function renderReference(container){
+  container.appendChild(el('h1',{class:'page-title'}, 'Labs/Tests'));
+  container.appendChild(el('p',{class:'page-sub'}, 'Abbreviations and the general monitoring schedule that applies to all clients, from the Devereux Psychotropic Medication Monitoring Guidelines.'));
+
+  container.appendChild(el('div',{class:'section-card'},[
+    el('h3',null,'General monitoring schedule (all clients)'),
+    el('div',{class:'item-note', style:'margin-bottom:6px;'}, 'Admission'),
+    el('div',{class:'item-text', style:'margin-bottom:10px;'}, `Vitals: ${ADMISSION_ALL.vitals} · Labs: ${ADMISSION_ALL.labs}. ${ADMISSION_ALL.note}`),
+    el('div',{class:'item-note', style:'margin-bottom:6px;'}, 'Routine monitoring'),
+    el('div',{class:'item-text'}, ROUTINE_ALL)
+  ]));
+
+  const vitalsTable = el('table',{class:'ref-table'},[
+    el('thead',null, el('tr',null,[el('th',null,'Abbrev.'), el('th',null,'Meaning')])),
+    el('tbody',null, ABBREV_VITALS.map(([a,b])=> el('tr',null,[el('td',null,a),el('td',null,b)])))
+  ]);
+  container.appendChild(el('h3',{style:'margin:18px 0 8px;font-size:14.5px;'}, 'Vitals'));
+  container.appendChild(vitalsTable);
+
+  const testsTable = el('table',{class:'ref-table'},[
+    el('thead',null, el('tr',null,[el('th',null,'Abbrev.'), el('th',null,'Meaning')])),
+    el('tbody',null, ABBREV_TESTS.map(([a,b])=> el('tr',null,[el('td',null,a),el('td',null,b)])))
+  ]);
+  container.appendChild(el('h3',{style:'margin:18px 0 8px;font-size:14.5px;'}, 'Tests'));
+  container.appendChild(testsTable);
+
+  const labsTable = el('table',{class:'ref-table'},[
+    el('thead',null, el('tr',null,[el('th',null,'Abbrev.'), el('th',null,'Name'), el('th',null,'Includes')])),
+    el('tbody',null, ABBREV_LABS.map(([a,b,c])=> el('tr',null,[el('td',null,a),el('td',null,b),el('td',null,c)])))
+  ]);
+  container.appendChild(el('h3',{style:'margin:18px 0 8px;font-size:14.5px;'}, 'Labs'));
+  container.appendChild(labsTable);
+}
+
+/* ============================= SETTINGS / DATA SOURCE ============================= */
+function renderSettings(container){
+  container.appendChild(el('h1',{class:'page-title'}, 'Data source'));
+  container.appendChild(el('p',{class:'page-sub'}, 'By default this app uses the medication list built into the file. You can instead connect it to a Google Sheet so the data can be edited without touching the app file.'));
+
+  const card = el('div',{class:'section-card'});
+  card.appendChild(el('h3',null,'Connect a Google Sheet'));
+
+  const ol = el('ol',{class:'settings-steps'},[
+    el('li',null,'Open the companion spreadsheet (ask for it if you don\'t have it) as a Google Sheet — upload it to Google Drive, then right-click it and choose "Open with → Google Sheets".'),
+    el('li',null,'In that Google Sheet, click Share, then under "General access" choose "Anyone with the link" and set the role to "Viewer".'),
+    el('li',null,'Copy the sheet\'s URL from your browser\'s address bar and paste it below, then click "Connect & Sync".')
+  ]);
+  card.appendChild(ol);
+
+  const row = el('div',{class:'settings-row'});
+  const input = el('input',{placeholder:'Paste the Google Sheet URL or ID here', value: state.sheetSource});
+  input.addEventListener('input', e=>{ state.sheetSource = e.target.value; });
+  row.appendChild(input);
+
+  const syncBtn = el('button',{class:'btn primary'}, state.syncStatus==='loading' ? 'Syncing…' : 'Connect & Sync');
+  if(state.syncStatus==='loading') syncBtn.disabled = true;
+  syncBtn.addEventListener('click', ()=> runSync());
+  row.appendChild(syncBtn);
+  card.appendChild(row);
+
+  if(state.sheetSource){
+    const disconnectBtn = el('button',{class:'btn danger', style:'margin-top:4px;'}, 'Disconnect & use built-in data');
+    disconnectBtn.addEventListener('click', ()=>{
+      state.sheetSource = '';
+      saveSheetSource('');
+      CLASS_GROUPS = DEFAULT_CLASS_GROUPS;
+      CLASS_DATA = DEFAULT_CLASS_DATA;
+      MEDICATIONS = DEFAULT_MEDICATIONS;
+      state.syncStatus = 'idle';
+      state.syncMessage = '';
+      render();
+    });
+    card.appendChild(disconnectBtn);
+  }
+
+  if(state.syncStatus==='success'){
+    card.appendChild(el('div',{class:'sync-status success'}, state.syncMessage + (state.lastSyncedAt ? ` (last synced ${state.lastSyncedAt})` : '')));
+  } else if(state.syncStatus==='error'){
+    card.appendChild(el('div',{class:'sync-status error'}, state.syncMessage));
+  } else if(state.syncStatus==='loading'){
+    card.appendChild(el('div',{class:'sync-status loading'}, 'Loading data from the Google Sheet…'));
+  }
+
+  container.appendChild(card);
+
+  const currentCard = el('div',{class:'section-card'},[
+    el('h3',null,'Currently showing'),
+    el('div',{class:'item-text'}, state.sheetSource ? 'Data from your connected Google Sheet.' : 'Built-in app data (not connected to a sheet).')
+  ]);
+  container.appendChild(currentCard);
+}
+
+async function runSync(){
+  if(!state.sheetSource || !state.sheetSource.trim()){
+    state.syncStatus = 'error';
+    state.syncMessage = 'Paste a Google Sheet URL or ID first.';
+    render();
+    return;
+  }
+  state.syncStatus = 'loading';
+  render();
+  try{
+    const result = await syncFromGoogleSheet(state.sheetSource);
+    saveSheetSource(state.sheetSource);
+    state.syncStatus = 'success';
+    state.syncMessage = `Connected — loaded ${result.medCount} medications across ${result.classCount} classes.`;
+    state.lastSyncedAt = new Date().toLocaleString();
+  } catch(err){
+    state.syncStatus = 'error';
+    state.syncMessage = 'Could not sync: ' + err.message;
+    // Keep whatever data was already loaded (defaults, or the last successful sync).
+  }
+  render();
+}
+
+/* ============================= MAIN RENDER ============================= */
+function render(){
+  renderNav();
+  const settingsBtn = document.getElementById('settingsBtn');
+  settingsBtn.onclick = ()=>{ state.tab='settings'; render(); };
+  const main = document.getElementById('main');
+  main.innerHTML='';
+  const disclaimer = el('div',{class:'disclaimer'}, 'This tool digitizes the facility’s psychotropic medication monitoring guideline for quick reference. It does not provide medical advice and does not replace the prescriber’s orders or clinical judgment.');
+  main.appendChild(disclaimer);
+
+  if(state.tab==='search') renderSearch(main);
+  else if(state.tab==='medDetail') renderMedDetail(main);
+  else if(state.tab==='reference') renderReference(main);
+  else if(state.tab==='settings') renderSettings(main);
+}
+
+render();
+if(state.sheetSource){
+  runSync();
+}
+</script>
+</body>
+</html>
